@@ -177,3 +177,22 @@ yarn_install(
 )
 
 # ---- END ---- Node Js rules
+
+# ---- START ---- GitOps rules
+rules_gitops_version = "01b16044b3ae3384d03a75f58d45218091ad1ba5"
+
+http_archive(
+    name = "com_adobe_rules_gitops",
+    sha256 = "4921c8f7fab5f16240f39bc67b10a1dce9f7c63eda54ceb7b97b88251ad7bdaf",
+    strip_prefix = "rules_gitops-%s" % rules_gitops_version,
+    urls = ["https://github.com/adobe/rules_gitops/archive/%s.zip" % rules_gitops_version],
+)
+
+load("@com_adobe_rules_gitops//gitops:deps.bzl", "rules_gitops_dependencies")
+
+rules_gitops_dependencies()
+
+load("@com_adobe_rules_gitops//gitops:repositories.bzl", "rules_gitops_repositories")
+
+rules_gitops_repositories()
+# ---- END ---- GitOps rules
