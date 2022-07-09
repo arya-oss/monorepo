@@ -2,7 +2,6 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@build_bazel_rules_nodejs//:index.bzl", "copy_to_bin", "nodejs_test")
 load("@npm//react-scripts:index.bzl", "react_scripts", "react_scripts_test")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
-load("@io_bazel_rules_docker//container:container.bzl", "container_image")
 
 # Filename conventions described at
 # https://create-react-app.dev/docs/running-tests#filename-conventions
@@ -126,11 +125,4 @@ pkg_tar(
     mode = "0644",
     package_dir = "/usr/share/nginx/html",
     strip_prefix = "/ui/build",
-)
-
-# Include it in our base image as a tar.
-container_image(
-    name = "image",
-    base = "@nginx_base//image",
-    tars = [":tar"],
 )

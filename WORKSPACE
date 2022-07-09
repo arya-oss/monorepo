@@ -16,41 +16,14 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
-load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
+# load 3rd party maven java dependencies
+load("//3rdparty/jvm:deps.bzl", "maven_dependencies")
 
-rules_jvm_external_deps()
+maven_dependencies()
 
-load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
+load("//3rdparty/jvm:repositories.bzl", "setup_maven_repositories")
 
-rules_jvm_external_setup()
-
-load("@rules_jvm_external//:defs.bzl", "maven_install")
-
-maven_install(
-    artifacts = [
-        "commons-io:commons-io:2.11.0",
-        "ch.qos.logback:logback-classic:1.2.10",
-        "org.slf4j:slf4j-api:1.7.35",
-        "junit:junit:4.12",
-        "org.powermock:powermock-module-junit4:2.0.9",
-        "org.powermock:powermock-api-mockito2:2.0.9",
-        "org.apache.httpcomponents:httpclient:4.5.13",
-        "org.apache.commons:commons-lang3:3.12.0",
-        "com.fasterxml.jackson.core:jackson-databind:2.13.2",
-        "org.springframework:spring-context:5.3.19",
-        "org.springframework:spring-web:5.3.19",
-        "org.springframework:spring-webmvc:5.3.19",
-        "org.springframework:spring-core:5.3.19",
-        "org.springframework:spring-beans:5.3.19",
-        "org.springframework:spring-aop:5.3.19",
-        "org.springframework:spring-tx:5.3.19",
-        "org.hibernate.orm:hibernate-core:6.0.0.Final",
-        "org.postgresql:postgresql:42.3.2",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-    ],
-)
+setup_maven_repositories()
 
 # ---- START --- Docker rules
 
@@ -87,6 +60,13 @@ container_pull(
     registry = "index.docker.io",
     repository = "library/golang",
     tag = "1.17.9-alpine",
+)
+
+container_pull(
+    name = "python_alpine_amd64",
+    registry = "index.docker.io",
+    repository = "library/python",
+    tag = "3.8-alpine",
 )
 
 container_pull(
@@ -178,7 +158,47 @@ yarn_install(
 
 # ---- END ---- Node Js rules
 
-# ---- START ---- GitOps rules
+# ---- Python Rules ------
+
+rules_python_version = "740825b7f74930c62f44af95c9a4c1bd428d2c53" # Latest @ 2021-06-23
+
+http_archive(
+    name = "rules_python",
+    sha256 = "3474c5815da4cb003ff22811a36a11894927eda1c2e64bf2dac63e914bfdf30f",
+    strip_prefix = "rules_python-{}".format(rules_python_version),
+    url = "https://github.com/bazelbuild/rules_python/archive/{}.zip".format(rules_python_version),
+)
+
+load("@rules_python//python:pip.bzl", "pip_install")
+
+pip_install(
+    name = "pip_deps",
+    requirements = "//3rdparty/python:requirements.txt",
+)
+
+# Start Scala Rules
+rules_scala_version = "e7a948ad1948058a7a5ddfbd9d1629d6db839933"
+http_archive(
+    name = "io_bazel_rules_scala",
+    sha256 = "76e1abb8a54f61ada974e6e9af689c59fd9f0518b49be6be7a631ce9fa45f236",
+    strip_prefix = "rules_scala-%s" % rules_scala_version,
+    type = "zip",
+    url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % rules_scala_version,
+)
+
+# Stores Scala version and other configuration
+load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
+scala_config(scala_version = "2.12.15")
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
+scala_repositories()
+
+load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
+scala_register_toolchains()
+
+# Gitops rules
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 rules_gitops_version = "01b16044b3ae3384d03a75f58d45218091ad1ba5"
 
 http_archive(
@@ -195,4 +215,3 @@ rules_gitops_dependencies()
 load("@com_adobe_rules_gitops//gitops:repositories.bzl", "rules_gitops_repositories")
 
 rules_gitops_repositories()
-# ---- END ---- GitOps rules

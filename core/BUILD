@@ -10,7 +10,6 @@ java_library(
     deps = [
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
-        "@maven//:commons_io_commons_io",
         "@maven//:org_apache_httpcomponents_httpclient",
     ],
 )
