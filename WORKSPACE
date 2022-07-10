@@ -42,6 +42,10 @@ load("@io_bazel_rules_docker//java:image.bzl", _java_image_repos = "repositories
 
 _java_image_repos()
 
+load("@io_bazel_rules_docker//python3:image.bzl", _py_image_repos = "repositories")
+
+_py_image_repos()
+
 load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
 
 container_deps()
@@ -63,10 +67,10 @@ container_pull(
 )
 
 container_pull(
-    name = "python_alpine_amd64",
+    name = "python_base",
     registry = "index.docker.io",
     repository = "library/python",
-    tag = "3.8-alpine",
+    tag = "3.8",
 )
 
 container_pull(
@@ -160,13 +164,11 @@ yarn_install(
 
 # ---- Python Rules ------
 
-rules_python_version = "740825b7f74930c62f44af95c9a4c1bd428d2c53" # Latest @ 2021-06-23
-
 http_archive(
     name = "rules_python",
-    sha256 = "3474c5815da4cb003ff22811a36a11894927eda1c2e64bf2dac63e914bfdf30f",
-    strip_prefix = "rules_python-{}".format(rules_python_version),
-    url = "https://github.com/bazelbuild/rules_python/archive/{}.zip".format(rules_python_version),
+    sha256 = "56dc7569e5dd149e576941bdb67a57e19cd2a7a63cc352b62ac047732008d7e1",
+    strip_prefix = "rules_python-0.10.0",
+    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.10.0.tar.gz",
 )
 
 load("@rules_python//python:pip.bzl", "pip_install")
@@ -176,8 +178,9 @@ pip_install(
     requirements = "//3rdparty/python:requirements.txt",
 )
 
-# Start Scala Rules
+## Start Scala Rules
 rules_scala_version = "e7a948ad1948058a7a5ddfbd9d1629d6db839933"
+
 http_archive(
     name = "io_bazel_rules_scala",
     sha256 = "76e1abb8a54f61ada974e6e9af689c59fd9f0518b49be6be7a631ce9fa45f236",
@@ -188,12 +191,15 @@ http_archive(
 
 # Stores Scala version and other configuration
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
+
 scala_config(scala_version = "2.12.15")
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
+
 scala_repositories()
 
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
+
 scala_register_toolchains()
 
 # Gitops rules
@@ -215,3 +221,17 @@ rules_gitops_dependencies()
 load("@com_adobe_rules_gitops//gitops:repositories.bzl", "rules_gitops_repositories")
 
 rules_gitops_repositories()
+
+# CC Rules
+
+http_archive(
+    name = "rules_cc",
+    sha256 = "4dccbfd22c0def164c8f47458bd50e0c7148f3d92002cdb459c2a96a68498241",
+    urls = ["https://github.com/bazelbuild/rules_cc/releases/download/0.0.1/rules_cc-0.0.1.tar.gz"],
+)
+
+load("@rules_cc//cc:repositories.bzl", "rules_cc_dependencies", "rules_cc_toolchains")
+
+rules_cc_dependencies()
+
+rules_cc_toolchains()

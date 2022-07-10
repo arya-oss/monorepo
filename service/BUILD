@@ -1,6 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary", "java_library")
 load("//:skylib/junit.bzl", "junit_tests")
-load("@io_bazel_rules_docker//container:container.bzl", "container_image")
+load("@io_bazel_rules_docker//java:image.bzl", "java_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_layer")
 
 DEPS = [
     "@maven//:ch_qos_logback_logback_classic",
@@ -15,6 +16,28 @@ DEPS = [
     "@maven//:org_springframework_spring_web",
     "@maven//:org_springframework_spring_webmvc",
 ]
+
+java_image(
+    name = "java_image",
+    base = "@java_slim_11//image",
+    main_class = "me.rajarya.learning.service.App",
+    runtime_deps = [
+        ":library",
+    ] + DEPS,
+)
+
+container_layer(
+    name = "java_symlink",
+    symlinks = {
+        "/usr/bin/java": "/usr/local/openjdk-11/bin/java",
+    },
+)
+
+container_image(
+    name = "image",
+    base = ":java_image",
+    layers = [":java_symlink"],
+)
 
 java_library(
     name = "library",
@@ -31,11 +54,9 @@ java_library(
 java_binary(
     name = "service",
     main_class = "me.rajarya.learning.service.App",
-    srcs = glob([
-        "src/main/java/**/*.java",
-    ]),
-    deps = [
-        ":library"
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        ":library",
     ] + DEPS,
 )
 
